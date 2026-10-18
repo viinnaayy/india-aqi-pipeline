@@ -1,0 +1,27 @@
+name: Daily AQI refresh
+
+on:
+  schedule:
+    - cron: "30 2 * * *"   # 02:30 UTC = 08:00 India time, every day
+  workflow_dispatch:        # adds a "Run workflow" button on GitHub for manual runs
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get the code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install packages
+        run: pip install -r requirements.txt
+
+      - name: Fetch last 7 days and load into the database
+        run: python -m pipeline.run --days 7
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
